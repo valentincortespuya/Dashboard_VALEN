@@ -1,133 +1,217 @@
-# %%
-
-#estoy jungando con streamlit para ver si funciona o no
-
 import streamlit as st
 import pandas as pd
 import folium
-
-
-# importamos matplotlibexpres
-
-
 import plotly.express as px
-# %%
-a =42
-# %%
- 
-
-
-st.title("Sabes donde estuviste el otro día?")
-
-fichero = st.file_uploader("carga tus datos")
-
-
-#-----------------------------------------------------------
-import streamlit as st
-import pandas as pd
-import folium
 from datetime import datetime
 from datetime import timedelta
+from PIL import Image
 
-# Cargar el archivo CSV
-df_combined = pd.read_csv('ubicaciones_historicas.csv')
 
-# Convierte las columnas de tiempo a objetos datetime
-df_combined['start_timestamp'] = pd.to_datetime(df_combined['start_timestamp'])
-df_combined['end_timestamp'] = pd.to_datetime(df_combined['end_timestamp'])
 
-# Filtros
-st.sidebar.header('Filtros')
-selected_distances = st.sidebar.multiselect('Selecciona una distancia:', df_combined['distance_group'].unique())
-selected_confidences = st.sidebar.multiselect('Selecciona un momento del día:', df_combined['momento_del_dia'].unique())
-selected_activities = st.sidebar.multiselect('Selecciona medio de transporte:', df_combined['activity_type'].unique())
+st.title("Comparación de Movimientos")
+col1, col2 = st.columns(2)
 
-# Filtro de fecha usando un rango de fechas
-date_range = st.sidebar.date_input('Selecciona un rango de fechas', 
-                                   min_value=df_combined['start_timestamp'].min().date(),
-                                   max_value=df_combined['start_timestamp'].max().date(),
-                                   value=(df_combined['start_timestamp'].min().date(), df_combined['start_timestamp'].max().date()))
-
-# Verificar si al menos un filtro está seleccionado
-if selected_distances or selected_confidences or selected_activities:
-    # Filtrar el DataFrame por los valores seleccionados
-    df_filtrado = df_combined[
-        (df_combined['momento_del_dia'].isin(selected_confidences)) & 
-        (df_combined['distance_group'].isin(selected_distances)) &
-        (df_combined['activity_type'].isin(selected_activities)) &
-        (df_combined['start_timestamp'].dt.date.between(date_range[0], date_range[1]))
-    ]
+# Usuario 1
+with col1:
+    st.header("Usuario 1")
+    df_user1 = pd.read_csv('ubicaciones_historicas_usuario1.csv')
     
-    # Calcular el centro de las coordenadas
-    if not df_filtrado.empty:
-        center_lat = df_filtrado['start_latitude'].mean()
-        center_lon = df_filtrado['start_longitude'].mean()
-    else:
-        # Valores de respaldo en caso de que no haya datos filtrados
-        center_lat = 40.468159
-        center_lon = -3.875562
+    df_user1['start_timestamp'] = pd.to_datetime(df_user1['start_timestamp'])
+    df_user1['end_timestamp'] = pd.to_datetime(df_user1['end_timestamp'])
+    
+    st.sidebar.header('Filtros - Usuario 1')
+    selected_distances_user1 = st.sidebar.multiselect('Selecciona una distancia:', df_user1['distance_group'].unique())
+    selected_confidences_user1 = st.sidebar.multiselect('Selecciona un momento del día:', df_user1['momento_del_dia'].unique())
+    selected_activities_user1 = st.sidebar.multiselect('Selecciona medio de transporte:', df_user1['activity_type'].unique())
+    
+    date_range_user1 = st.sidebar.date_input('Selecciona un rango de fechas', 
+                                    min_value=df_user1['start_timestamp'].min().date(),
+                                    max_value=df_user1['start_timestamp'].max().date(),
+                                    value=(df_user1['start_timestamp'].min().date(), df_user1['start_timestamp'].max().date()))
 
-    # Crear un mapa centrado en el centro calculado
-    m = folium.Map(location=[center_lat, center_lon], zoom_start=10)
-
-    # Iterar a través del DataFrame filtrado y agregar marcadores y líneas al mapa
-    for index, row in df_filtrado.iterrows():
-        start_lat = row['start_latitude']
-        start_lon = row['start_longitude']
-        end_lat = row['end_latitude']
-        end_lon = row['end_longitude']
-        distance = row['distance']
-        duration = row['duration_formatted']
-
-        # Verificar si la distancia o la duración son valores extremos
-        is_extreme_distance = distance == df_filtrado["distance"].min() or distance == df_filtrado["distance"].max()
-        is_extreme_duration = duration == df_filtrado["duration_formatted"].min() or duration == df_filtrado["duration_formatted"].max()
-
-        # Agregar marcadores de inicio y fin con íconos de colores para valores extremos
-        if is_extreme_distance or is_extreme_duration:
-            folium.Marker([start_lat, start_lon], icon=folium.Icon(color='red')).add_to(m)
-            folium.Marker([end_lat, end_lon], icon=folium.Icon(color='pink')).add_to(m)
-        else:
-            # Agregar marcadores sin íconos
-            folium.Marker([start_lat, start_lon], icon=None).add_to(m)
-            folium.Marker([end_lat, end_lon], icon=None).add_to(m)
+    if selected_distances_user1 or selected_confidences_user1 or selected_activities_user1:
+        df_filtrado_user1 = df_user1[
+            (df_user1['momento_del_dia'].isin(selected_confidences_user1)) & 
+            (df_user1['distance_group'].isin(selected_distances_user1)) &
+            (df_user1['activity_type'].isin(selected_activities_user1)) &
+            (df_user1['start_timestamp'].dt.date.between(date_range_user1[0], date_range_user1[1]))
+        ]
         
-        # Agregar líneas
-        folium.PolyLine([(start_lat, start_lon), (end_lat, end_lon)], color="blue").add_to(m)
+        distancia_media_por_transporte_user1 = df_user1.groupby('activity_type')['distance'].mean().reset_index()
 
-    # Calcular y mostrar la suma de la columna "distance" después del filtrado
-    total_distance = df_filtrado['distance'].sum()/1000
+        if not df_filtrado_user1.empty:
+            center_lat_user1 = df_user1['start_latitude'].mean()
+            center_lon_user1 = df_user1['start_longitude'].mean()
+        else:
+            center_lat_user1 = 40.468159
+            center_lon_user1 = -3.875562
 
-    # Crear un texto personalizado con el rango de fechas y la distancia total
-    custom_text = f'Desde "{date_range[0].strftime("%Y-%m-%d")}" hasta "{date_range[1].strftime("%Y-%m-%d")}", te has movido.'
-    custom_text += f' La distancia total recorrida es de {total_distance} kms. el equivalente a {total_distance/40000} vueltas al mundo por el ecuador'
+        m_user1 = folium.Map(location=[center_lat_user1, center_lon_user1], zoom_start=10)
+
+        for index, row in df_filtrado_user1.iterrows():
+            start_lat = row['start_latitude']
+            start_lon = row['start_longitude']
+            end_lat = row['end_latitude']
+            end_lon = row['end_longitude']
+            distance = row['distance']
+            duration = row['duration_formatted']
+
+            is_extreme_distance = distance == df_user1["distance"].min() or distance == df_user1["distance"].max()
+            is_extreme_duration = duration == df_user1["duration_formatted"].min() or duration == df_user1["duration_formatted"].max()
+
+            if is_extreme_distance or is_extreme_duration:
+                folium.Marker([start_lat, start_lon], icon=folium.Icon(color='red')).add_to(m_user1)
+                folium.Marker([end_lat, end_lon], icon=folium.Icon(color='pink')).add_to(m_user1)
+            else:
+                folium.Marker([start_lat, start_lon], icon=None).add_to(m_user1)
+                folium.Marker([end_lat, end_lon], icon=None).add_to(m_user1)
+            
+            folium.PolyLine([(start_lat, start_lon), (end_lat, end_lon)], color="blue").add_to(m_user1)
+
+        total_distance_user1 = df_user1['distance'].sum()/1000
+
+        custom_text_user1 = f'Desde "{date_range_user1[0].strftime("%Y-%m-%d")}" hasta "{date_range_user1[1].strftime("%Y-%m-%d")}", te has movido.'
+        custom_text_user1 += f' La distancia total recorrida es de {total_distance_user1} kms. el equivalente a {total_distance_user1/40000} vueltas al mundo por el ecuador'
+        
+        df_user1['duration_seconds'] = (df_user1['end_timestamp'] - df_user1['start_timestamp']).dt.total_seconds()
+        total_duration_seconds_user1 = df_user1['duration_seconds'].sum()
+        total_duration_user1 = timedelta(seconds=total_duration_seconds_user1)
+        days_user1 = total_duration_user1.days
+        seconds_user1 = total_duration_user1.seconds
+        hours_user1, remainder_user1 = divmod(seconds_user1, 3600)
+        minutes_user1, seconds_user1 = divmod(remainder_user1, 60)
+
+        st.write(custom_text_user1) 
+        st.write(f'Total de tiempo moviéndote: {days_user1:02d} dias {hours_user1:02d} horas {minutes_user1:02d} minutos {seconds_user1:02d} segundos')
+        st.components.v1.html(m_user1._repr_html_(), width=400, height=300)
+        
+        # Gráfico de barras para la distancia media por tipo de transporte
+        st.subheader('Distancia Media por Tipo de Transporte - Usuario 1')
+        chart_distance_user1 = px.bar(distancia_media_por_transporte_user1, x='activity_type', y='distance', title='Distancia Media por Tipo de Transporte - Usuario 1')
+        chart_distance_user1.update_xaxes(title_text='Tipo de Transporte')
+        chart_distance_user1.update_yaxes(title_text='Distancia Media (metros)')
+        st.plotly_chart(chart_distance_user1)
+        
+        # Calcular la cantidad de veces que se han usado los diferentes medios de transporte
+        transport_counts_user1 = df_filtrado_user1['activity_type'].value_counts()
+        
+        st.subheader('Uso de Medios de Transporte - Usuario 1')
+        # Mostrar los contadores de uso de medios de transporte en un formato de tabla
+        st.write(transport_counts_user1)
+        
+    else:
+        st.warning('Por favor, selecciona filtros para generar información.')
+
+
+# Usuario 2
+with col2:
+    st.header("Usuario 2")
     
-    # Calcular la diferencia entre las fechas de inicio y fin en segundos
-    df_filtrado['duration_seconds'] = (df_filtrado['end_timestamp'] - df_filtrado['start_timestamp']).dt.total_seconds()
-
-# Calcular la suma de la columna duration_seconds
-    total_duration_seconds = df_filtrado['duration_seconds'].sum()
-
-# Convertir el resultado en un formato legible (días, horas, minutos, segundos)
-    total_duration = timedelta(seconds=total_duration_seconds)
-    days = total_duration.days
-    seconds = total_duration.seconds
-    hours, remainder = divmod(seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-
-# Mostrar el resultado
-    st.write(custom_text) 
-    st.write(f'Total de tiempo moviéndote: {days:02d} dias {hours:02d} horas {minutes:02d} minutos {seconds:02d} segundos')
-   
-
+    # Cargar el archivo CSV para el Usuario 2
+    df_user2 = pd.read_csv('ubicaciones_historicas_usuario2.csv')  # Reemplaza 'ubicaciones_historicas_usuario2.csv' con el nombre del archivo del Usuario 2
     
-
-
-    # Mostrar el mapa en Streamlit
-    st.components.v1.html(m._repr_html_(), width=800, height=600)
+    # Convierte las columnas de tiempo a objetos datetime
+    df_user2['start_timestamp'] = pd.to_datetime(df_user2['start_timestamp'])
+    df_user2['end_timestamp'] = pd.to_datetime(df_user2['end_timestamp'])
     
-    # Mostrar el rango de fechas seleccionado
-    # st.write(f'Desde {date_range[0]} hasta {date_range[1]}, te has movido.')
+    # Filtros para el Usuario 2
+    st.sidebar.header('Filtros - Usuario 2')
+    selected_distances_user2 = st.sidebar.multiselect('Selecciona una distancia - Usuario 2:', df_user2['distance_group'].unique())
+    selected_confidences_user2 = st.sidebar.multiselect('Selecciona un momento del día - Usuario 2:', df_user2['momento_del_dia'].unique())
+    selected_activities_user2 = st.sidebar.multiselect('Selecciona medio de transporte - Usuario 2:', df_user2['activity_type'].unique())
+    
+    # Filtro de fecha usando un rango de fechas
+    date_range_user2 = st.sidebar.date_input('Selecciona un rango de fechas - Usuario 2', 
+                                    min_value=df_user2['start_timestamp'].min().date(),
+                                    max_value=df_user2['start_timestamp'].max().date(),
+                                    value=(df_user2['start_timestamp'].min().date(), df_user2['start_timestamp'].max().date()))
 
-else:
-    st.warning('Por favor, selecciona en los filtros para generar conocimiento máximo .')
+    # Verificar si al menos un filtro está seleccionado
+    if selected_distances_user2 or selected_confidences_user2 or selected_activities_user2:
+        # Filtrar el DataFrame por los valores seleccionados
+        df_filtrado_user2 = df_user2[
+            (df_user2['momento_del_dia'].isin(selected_confidences_user2)) & 
+            (df_user2['distance_group'].isin(selected_distances_user2)) &
+            (df_user2['activity_type'].isin(selected_activities_user2)) &
+            (df_user2['start_timestamp'].dt.date.between(date_range_user2[0], date_range_user2[1]))
+        ]
+        # Calcular la distancia media por tipo de transporte
+        distancia_media_por_transporte_user2 = df_filtrado_user2.groupby('activity_type')['distance'].mean().reset_index()
+
+        # Calcular el centro de las coordenadas
+        if not df_filtrado_user2.empty:
+            center_lat_user2 = df_filtrado_user2['start_latitude'].mean()
+            center_lon_user2 = df_filtrado_user2['start_longitude'].mean()
+        else:
+            # Valores de respaldo en caso de que no haya datos filtrados
+            center_lat_user2 = 40.468159
+            center_lon_user2 = -3.875562
+
+        # Crear un mapa centrado en el centro calculado
+        m_user2 = folium.Map(location=[center_lat_user2, center_lon_user2], zoom_start=10)
+
+        # Iterar a través del DataFrame filtrado y agregar marcadores y líneas al mapa
+        for index, row in df_filtrado_user2.iterrows():
+            start_lat_user2 = row['start_latitude']
+            start_lon_user2 = row['start_longitude']
+            end_lat_user2 = row['end_latitude']
+            end_lon_user2 = row['end_longitude']
+            distance_user2 = row['distance']
+            duration_user2 = row['duration_formatted']
+
+            # Verificar si la distancia o la duración son valores extremos
+            is_extreme_distance_user2 = distance_user2 == df_filtrado_user2["distance"].min() or distance_user2 == df_filtrado_user2["distance"].max()
+            is_extreme_duration_user2 = duration_user2 == df_filtrado_user2["duration_formatted"].min() or duration_user2 == df_filtrado_user2["duration_formatted"].max()
+
+            # Agregar marcadores de inicio y fin con íconos de colores para valores extremos
+            if is_extreme_distance_user2 or is_extreme_duration_user2:
+                folium.Marker([start_lat_user2, start_lon_user2], icon=folium.Icon(color='red')).add_to(m_user2)
+                folium.Marker([end_lat_user2, end_lon_user2], icon=folium.Icon(color='pink')).add_to(m_user2)
+            else:
+                # Agregar marcadores sin íconos
+                folium.Marker([start_lat_user2, start_lon_user2], icon=None).add_to(m_user2)
+                folium.Marker([end_lat_user2, end_lon_user2], icon=None).add_to(m_user2)
+            
+            # Agregar líneas
+            folium.PolyLine([(start_lat_user2, start_lon_user2), (end_lat_user2, end_lon_user2)], color="blue").add_to(m_user2)
+
+        # Calcular y mostrar la suma de la columna "distance" después del filtrado
+        total_distance_user2 = df_filtrado_user2['distance'].sum()/1000
+
+        # Crear un texto personalizado con el rango de fechas y la distancia total
+        custom_text_user2 = f'Desde "{date_range_user2[0].strftime("%Y-%m-%d")}" hasta "{date_range_user2[1].strftime("%Y-%m-%d")}", te has movido.'
+        custom_text_user2 += f' La distancia total recorrida es de {total_distance_user2} kms. el equivalente a {total_distance_user2/40000} vueltas al mundo por el ecuador'
+        
+        # Calcular la diferencia entre las fechas de inicio y fin en segundos
+        df_filtrado_user2['duration_seconds'] = (df_filtrado_user2['end_timestamp'] - df_filtrado_user2['start_timestamp']).dt.total_seconds()
+
+        # Calcular la suma de la columna duration_seconds
+        total_duration_seconds_user2 = df_filtrado_user2['duration_seconds'].sum()
+
+        # Convertir el resultado en un formato legible (días, horas, minutos, segundos)
+        total_duration_user2 = timedelta(seconds=total_duration_seconds_user2)
+        days_user2 = total_duration_user2.days
+        seconds_user2 = total_duration_user2.seconds
+        hours_user2, remainder_user2 = divmod(seconds_user2, 3600)
+        minutes_user2, seconds_user2 = divmod(remainder_user2, 60)
+
+        # Mostrar el resultado
+        st.write(custom_text_user2) 
+        st.write(f'Total de tiempo moviéndote: {days_user2:02d} días {hours_user2:02d} horas {minutes_user2:02d} minutos {seconds_user2:02d} segundos')
+
+        # Mostrar el mapa en Streamlit
+        st.components.v1.html(m_user2._repr_html_(), width=400, height=300)
+        
+        # Gráfico de barras para la distancia media por tipo de transporte
+        st.subheader('Distancia Media por Tipo de Transporte - Usuario 2')
+        chart_distance_user2 = px.bar(distancia_media_por_transporte_user2, x='activity_type', y='distance', title='Distancia Media por Tipo de Transporte - Usuario 2')
+        chart_distance_user2.update_xaxes(title_text='Tipo de Transporte')
+        chart_distance_user2.update_yaxes(title_text='Distancia Media (metros)')
+        st.plotly_chart(chart_distance_user2)
+    else:
+        st.warning('Por favor, selecciona filtros para generar información.')  # Cambio el mensaje para el Usuario 2
+        # Cargar una imagen desde tu sistema de archivos local
+        image_user2 = Image.open('IMG-20230826-WA0000.jpg')  # Cambio la imagen para el Usuario 2
+
+        # Mostrar la imagen en Streamlit
+        st.image(image_user2, caption='Si no viste esta serie de pequeño, tu infancia fue una mierda', use_column_width=True)
