@@ -5,8 +5,13 @@ import plotly.express as px
 from datetime import datetime
 from datetime import timedelta
 from PIL import Image
+import numpy as np
+import calplot
+import matplotlib.pyplot as plt
+import tempfile
+import pylab
 
-
+st.set_page_config(layout = 'wide', initial_sidebar_state = 'collapsed', page_title = '', page_icon = '')
 
 st.title("Comparación de Movimientos")
 col1, col2 = st.columns(2)
@@ -20,9 +25,9 @@ with col1:
     df_user1['end_timestamp'] = pd.to_datetime(df_user1['end_timestamp'])
     
     st.sidebar.header('Filtros - Usuario 1')
-    selected_distances_user1 = st.sidebar.multiselect('Selecciona una distancia:', df_user1['distance_group'].unique())
-    selected_confidences_user1 = st.sidebar.multiselect('Selecciona un momento del día:', df_user1['momento_del_dia'].unique())
-    selected_activities_user1 = st.sidebar.multiselect('Selecciona medio de transporte:', df_user1['activity_type'].unique())
+    selected_distances_user1 = st.sidebar.multiselect('Selecciona una distancia - Usuario 1:', df_user1['distance_group'].unique())
+    selected_confidences_user1 = st.sidebar.multiselect('Selecciona un momento del día - Usuario 1:', df_user1['momento_del_dia'].unique())
+    selected_activities_user1 = st.sidebar.multiselect('Selecciona medio de transporte - Usuario 1:', df_user1['activity_type'].unique())
     
     date_range_user1 = st.sidebar.date_input('Selecciona un rango de fechas', 
                                     min_value=df_user1['start_timestamp'].min().date(),
@@ -37,7 +42,7 @@ with col1:
             (df_user1['start_timestamp'].dt.date.between(date_range_user1[0], date_range_user1[1]))
         ]
         
-        distancia_media_por_transporte_user1 = df_user1.groupby('activity_type')['distance'].mean().reset_index()
+        distancia_media_por_transporte_user1 = df_filtrado_user1.groupby('activity_type')['distance'].mean().reset_index()
 
         if not df_filtrado_user1.empty:
             center_lat_user1 = df_user1['start_latitude'].mean()
@@ -49,30 +54,44 @@ with col1:
         m_user1 = folium.Map(location=[center_lat_user1, center_lon_user1], zoom_start=10)
 
         for index, row in df_filtrado_user1.iterrows():
-            start_lat = row['start_latitude']
-            start_lon = row['start_longitude']
-            end_lat = row['end_latitude']
-            end_lon = row['end_longitude']
-            distance = row['distance']
-            duration = row['duration_formatted']
+            start_lat_user1 = row['start_latitude']
+            start_lon_user1 = row['start_longitude']
+            end_lat_user1 = row['end_latitude']
+            end_lon_user1 = row['end_longitude']
+            distance_user1 = row['distance']
+            duration_user1 = row['duration_formatted']
 
-            is_extreme_distance = distance == df_user1["distance"].min() or distance == df_user1["distance"].max()
-            is_extreme_duration = duration == df_user1["duration_formatted"].min() or duration == df_user1["duration_formatted"].max()
+            is_extreme_distance_user1 = distance_user1 == df_filtrado_user1["distance"].min() or distance_user1 == df_filtrado_user1["distance"].max()
+            is_extreme_duration_user1 = duration_user1 == df_filtrado_user1["duration_formatted"].min() or duration_user1 == df_filtrado_user1["duration_formatted"].max()
 
-            if is_extreme_distance or is_extreme_duration:
-                folium.Marker([start_lat, start_lon], icon=folium.Icon(color='red')).add_to(m_user1)
-                folium.Marker([end_lat, end_lon], icon=folium.Icon(color='pink')).add_to(m_user1)
+            if is_extreme_distance_user1 or is_extreme_duration_user1:
+                folium.Marker([start_lat_user1, start_lon_user1], icon=folium.Icon(color='red')).add_to(m_user1)
+                folium.Marker([end_lat_user1, end_lon_user1], icon=folium.Icon(color='pink')).add_to(m_user1)
             else:
-                folium.Marker([start_lat, start_lon], icon=None).add_to(m_user1)
-                folium.Marker([end_lat, end_lon], icon=None).add_to(m_user1)
+                folium.Marker([start_lat_user1, start_lon_user1], icon=None).add_to(m_user1)
+                folium.Marker([end_lat_user1, end_lon_user1], icon=None).add_to(m_user1)
             
-            folium.PolyLine([(start_lat, start_lon), (end_lat, end_lon)], color="blue").add_to(m_user1)
+            folium.PolyLine([(start_lat_user1, start_lon_user1), (end_lat_user1, end_lon_user1)], color="blue").add_to(m_user1)
 
-        total_distance_user1 = df_user1['distance'].sum()/1000
+        total_distance_user1 = df_filtrado_user1['distance'].sum()/1000
 
         custom_text_user1 = f'Desde "{date_range_user1[0].strftime("%Y-%m-%d")}" hasta "{date_range_user1[1].strftime("%Y-%m-%d")}", te has movido.'
-        custom_text_user1 += f' La distancia total recorrida es de {total_distance_user1} kms. el equivalente a {total_distance_user1/40000} vueltas al mundo por el ecuador'
+
+        st.write(custom_text_user1)
+        col3, col4= st.columns(2)
+
+        with col3:
+            
+            st.markdown('total distance')
+            st.metric(label='km', value = total_distance_user1)
+
+        with col4:
+            
+            st.markdown('vueltas al mundo')
+            st.metric(label='vueltas al mundo', value = total_distance_user1/40000)
+
         
+
         df_user1['duration_seconds'] = (df_user1['end_timestamp'] - df_user1['start_timestamp']).dt.total_seconds()
         total_duration_seconds_user1 = df_user1['duration_seconds'].sum()
         total_duration_user1 = timedelta(seconds=total_duration_seconds_user1)
@@ -81,7 +100,7 @@ with col1:
         hours_user1, remainder_user1 = divmod(seconds_user1, 3600)
         minutes_user1, seconds_user1 = divmod(remainder_user1, 60)
 
-        st.write(custom_text_user1) 
+         
         st.write(f'Total de tiempo moviéndote: {days_user1:02d} dias {hours_user1:02d} horas {minutes_user1:02d} minutos {seconds_user1:02d} segundos')
         st.components.v1.html(m_user1._repr_html_(), width=400, height=300)
         
@@ -98,9 +117,29 @@ with col1:
         st.subheader('Uso de Medios de Transporte - Usuario 1')
         # Mostrar los contadores de uso de medios de transporte en un formato de tabla
         st.write(transport_counts_user1)
+        #grafico
+        df_user1['start_timestamp'] = pd.to_datetime(df_user1['start_timestamp'])
+
+        actividades_por_dia = df_user1.groupby(df_user1['start_timestamp'].dt.floor('D'))['activity_type'].count()
+
+        fig = calplot.calplot(actividades_por_dia,
+                    suptitle='Calendario',
+                    suptitle_kws={'x': 0.0, 'y': 1.0})
         
+        plt.savefig('temp_calendar.png')
+        plt.show()
+        # Muestra la figura en Streamlit
+        st.image('temp_calendar.png')
+        
+                
     else:
         st.warning('Por favor, selecciona filtros para generar información.')
+        # Cargar una imagen desde tu sistema de archivos local
+        image_user1 = Image.open('IMG-20230826-WA0000.jpg')  # Cambio la imagen para el Usuario 1
+
+        # Mostrar la imagen en Streamlit
+        st.image(image_user1, caption='Si no viste esta serie de pequeño, tu infancia fue una mierda', use_column_width=True)
+
 
 
 # Usuario 2
@@ -177,11 +216,22 @@ with col2:
 
         # Calcular y mostrar la suma de la columna "distance" después del filtrado
         total_distance_user2 = df_filtrado_user2['distance'].sum()/1000
+        custom_text_user2 = f'Desde "{date_range_user2[0].strftime("%Y-%m-%d")}" hasta "{date_range_user1[1].strftime("%Y-%m-%d")}", te has movido.'
 
-        # Crear un texto personalizado con el rango de fechas y la distancia total
-        custom_text_user2 = f'Desde "{date_range_user2[0].strftime("%Y-%m-%d")}" hasta "{date_range_user2[1].strftime("%Y-%m-%d")}", te has movido.'
-        custom_text_user2 += f' La distancia total recorrida es de {total_distance_user2} kms. el equivalente a {total_distance_user2/40000} vueltas al mundo por el ecuador'
+        st.write(custom_text_user2)
         
+        col5, col6= st.columns(2)
+
+        with col5:
+            
+            st.markdown('total distance')
+            st.metric(label='km', value = total_distance_user2)
+
+        with col6:
+            
+            st.markdown('vueltas al mundo')
+            st.metric(label='vueltas al mundo', value = total_distance_user2/40000)
+
         # Calcular la diferencia entre las fechas de inicio y fin en segundos
         df_filtrado_user2['duration_seconds'] = (df_filtrado_user2['end_timestamp'] - df_filtrado_user2['start_timestamp']).dt.total_seconds()
 
@@ -196,7 +246,7 @@ with col2:
         minutes_user2, seconds_user2 = divmod(remainder_user2, 60)
 
         # Mostrar el resultado
-        st.write(custom_text_user2) 
+        
         st.write(f'Total de tiempo moviéndote: {days_user2:02d} días {hours_user2:02d} horas {minutes_user2:02d} minutos {seconds_user2:02d} segundos')
 
         # Mostrar el mapa en Streamlit
@@ -208,6 +258,24 @@ with col2:
         chart_distance_user2.update_xaxes(title_text='Tipo de Transporte')
         chart_distance_user2.update_yaxes(title_text='Distancia Media (metros)')
         st.plotly_chart(chart_distance_user2)
+         # Calcular la cantidad de veces que se han usado los diferentes medios de transporte
+        transport_counts_user2 = df_filtrado_user2['activity_type'].value_counts()
+        
+        st.subheader('Uso de Medios de Transporte - Usuario 2')
+        # Mostrar los contadores de uso de medios de transporte en un formato de tabla
+        st.write(transport_counts_user2)
+        df_user1['start_timestamp'] = pd.to_datetime(df_user1['start_timestamp'])
+
+        # Configura el índice como un DatetimeIndex
+        actividades_por_dia = df_user1.groupby(df_user1['start_timestamp'].dt.floor('D'))['activity_type'].count()
+
+        # Crea el gráfico de calendario
+        calplot.calplot(actividades_por_dia,
+                        suptitle='Calendario',
+                        suptitle_kws={'x': 0.0, 'y': 1.0})
+
+        # Muestra el gráfico
+        st.plt.show()
     else:
         st.warning('Por favor, selecciona filtros para generar información.')  # Cambio el mensaje para el Usuario 2
         # Cargar una imagen desde tu sistema de archivos local
