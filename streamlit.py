@@ -13,23 +13,28 @@ import pylab
 
 st.set_page_config(layout = 'wide', initial_sidebar_state = 'collapsed', page_title = '', page_icon = '')
 
-st.title("Comparación de Movimientos")
+# Título principal
+st.title("Comparador de Movimientos")
+# Texto explicativo con fuente más pequeña utilizando Markdown
+st.markdown("Ahora, usando los filtros, puedes ver cómo te mueves, en qué medios, qué distancias, en qué momento del día y en qué fechas .", unsafe_allow_html=True)
+
+st.text
 col1, col2 = st.columns(2)
 
 # Usuario 1
 with col1:
-    st.header("Usuario 1")
+    st.header("Momento A")
     df_user1 = pd.read_csv('ubicaciones_historicas_usuario1.csv')
     
     df_user1['start_timestamp'] = pd.to_datetime(df_user1['start_timestamp'])
     df_user1['end_timestamp'] = pd.to_datetime(df_user1['end_timestamp'])
     
-    st.sidebar.header('Filtros - Usuario 1')
-    selected_distances_user1 = st.sidebar.multiselect('Selecciona una distancia - Usuario 1:', df_user1['distance_group'].unique())
-    selected_confidences_user1 = st.sidebar.multiselect('Selecciona un momento del día - Usuario 1:', df_user1['momento_del_dia'].unique())
-    selected_activities_user1 = st.sidebar.multiselect('Selecciona medio de transporte - Usuario 1:', df_user1['activity_type'].unique())
+    st.sidebar.header('Momento A')
+    selected_distances_user1 = st.sidebar.multiselect('Selecciona una distancia A:', df_user1['distance_group'].unique())
+    selected_confidences_user1 = st.sidebar.multiselect('Selecciona un momento del día A:', df_user1['momento_del_dia'].unique())
+    selected_activities_user1 = st.sidebar.multiselect('Selecciona medio de transporte A:', df_user1['activity_type'].unique())
     
-    date_range_user1 = st.sidebar.date_input('Selecciona un rango de fechas', 
+    date_range_user1 = st.sidebar.date_input('Selecciona un rango de fechas A', 
                                     min_value=df_user1['start_timestamp'].min().date(),
                                     max_value=df_user1['start_timestamp'].max().date(),
                                     value=(df_user1['start_timestamp'].min().date(), df_user1['start_timestamp'].max().date()))
@@ -76,7 +81,8 @@ with col1:
         total_distance_user1 = df_filtrado_user1['distance'].sum()/1000
 
         custom_text_user1 = f'Desde "{date_range_user1[0].strftime("%Y-%m-%d")}" hasta "{date_range_user1[1].strftime("%Y-%m-%d")}", te has movido.'
-
+        # Mostrar el mapa en Streamlit
+        st.components.v1.html(m_user1._repr_html_(), width=400, height=300)
         st.write(custom_text_user1)
         col3, col4= st.columns(2)
 
@@ -92,20 +98,26 @@ with col1:
 
         
 
-        df_user1['duration_seconds'] = (df_user1['end_timestamp'] - df_user1['start_timestamp']).dt.total_seconds()
-        total_duration_seconds_user1 = df_user1['duration_seconds'].sum()
+       # Calcular la diferencia entre las fechas de inicio y fin en segundos
+        df_filtrado_user1['duration_seconds'] = (df_filtrado_user1['end_timestamp'] - df_filtrado_user1['start_timestamp']).dt.total_seconds()
+
+        # Calcular la suma de la columna duration_seconds
+        total_duration_seconds_user1 = df_filtrado_user1['duration_seconds'].sum()
+
+        # Convertir el resultado en un formato legible (días, horas, minutos, segundos)
         total_duration_user1 = timedelta(seconds=total_duration_seconds_user1)
         days_user1 = total_duration_user1.days
         seconds_user1 = total_duration_user1.seconds
         hours_user1, remainder_user1 = divmod(seconds_user1, 3600)
         minutes_user1, seconds_user1 = divmod(remainder_user1, 60)
 
-         
-        st.write(f'Total de tiempo moviéndote: {days_user1:02d} dias {hours_user1:02d} horas {minutes_user1:02d} minutos {seconds_user1:02d} segundos')
-        st.components.v1.html(m_user1._repr_html_(), width=400, height=300)
+        # Mostrar el resultado
+        
+        st.write(f'Total de tiempo moviéndote: {days_user1:02d} días {hours_user1:02d} horas {minutes_user1:02d} minutos {seconds_user1:02d} segundos')
+
         
         # Gráfico de barras para la distancia media por tipo de transporte
-        st.subheader('Distancia Media por Tipo de Transporte - Usuario 1')
+        st.subheader('Distancia Media por Tipo de Transporte - A')
         chart_distance_user1 = px.bar(distancia_media_por_transporte_user1, x='activity_type', y='distance', title='Distancia Media por Tipo de Transporte - Usuario 1')
         chart_distance_user1.update_xaxes(title_text='Tipo de Transporte')
         chart_distance_user1.update_yaxes(title_text='Distancia Media (metros)')
@@ -114,13 +126,13 @@ with col1:
         # Calcular la cantidad de veces que se han usado los diferentes medios de transporte
         transport_counts_user1 = df_filtrado_user1['activity_type'].value_counts()
         
-        st.subheader('Uso de Medios de Transporte - Usuario 1')
+        st.subheader('Cantidad de veces que has desplazado en... - A')
         # Mostrar los contadores de uso de medios de transporte en un formato de tabla
         st.write(transport_counts_user1)
         #grafico
-        df_user1['start_timestamp'] = pd.to_datetime(df_user1['start_timestamp'])
+        df_filtrado_user1['start_timestamp'] = pd.to_datetime(df_filtrado_user1['start_timestamp'])
 
-        actividades_por_dia = df_user1.groupby(df_user1['start_timestamp'].dt.floor('D'))['activity_type'].count()
+        actividades_por_dia = df_filtrado_user1.groupby(df_filtrado_user1['start_timestamp'].dt.floor('D'))['activity_type'].count()
 
         fig = calplot.calplot(actividades_por_dia,
                     suptitle='Calendario',
@@ -135,16 +147,16 @@ with col1:
     else:
         st.warning('Por favor, selecciona filtros para generar información.')
         # Cargar una imagen desde tu sistema de archivos local
-        image_user1 = Image.open('IMG-20230826-WA0000.jpg')  # Cambio la imagen para el Usuario 1
+        image_user1 = Image.open('estaciones.jpg')  # Cambio la imagen para el Usuario 1
 
         # Mostrar la imagen en Streamlit
-        st.image(image_user1, caption='Si no viste esta serie de pequeño, tu infancia fue una mierda', use_column_width=True)
+        st.image(image_user1, caption='Crees que te mueves lo mismo en vernano que en invierno, por la mañana que por la tarde...', use_column_width=True)
 
 
 
 # Usuario 2
 with col2:
-    st.header("Usuario 2")
+    st.header("Momento B")
     
     # Cargar el archivo CSV para el Usuario 2
     df_user2 = pd.read_csv('ubicaciones_historicas_usuario2.csv')  # Reemplaza 'ubicaciones_historicas_usuario2.csv' con el nombre del archivo del Usuario 2
@@ -154,13 +166,13 @@ with col2:
     df_user2['end_timestamp'] = pd.to_datetime(df_user2['end_timestamp'])
     
     # Filtros para el Usuario 2
-    st.sidebar.header('Filtros - Usuario 2')
-    selected_distances_user2 = st.sidebar.multiselect('Selecciona una distancia - Usuario 2:', df_user2['distance_group'].unique())
-    selected_confidences_user2 = st.sidebar.multiselect('Selecciona un momento del día - Usuario 2:', df_user2['momento_del_dia'].unique())
-    selected_activities_user2 = st.sidebar.multiselect('Selecciona medio de transporte - Usuario 2:', df_user2['activity_type'].unique())
+    st.sidebar.header('Momento B')
+    selected_distances_user2 = st.sidebar.multiselect('Selecciona una distancia b:', df_user2['distance_group'].unique())
+    selected_confidences_user2 = st.sidebar.multiselect('Selecciona un momento del día B:', df_user2['momento_del_dia'].unique())
+    selected_activities_user2 = st.sidebar.multiselect('Selecciona medio de transporte B:', df_user2['activity_type'].unique())
     
     # Filtro de fecha usando un rango de fechas
-    date_range_user2 = st.sidebar.date_input('Selecciona un rango de fechas - Usuario 2', 
+    date_range_user2 = st.sidebar.date_input('Selecciona un rango de fechas B', 
                                     min_value=df_user2['start_timestamp'].min().date(),
                                     max_value=df_user2['start_timestamp'].max().date(),
                                     value=(df_user2['start_timestamp'].min().date(), df_user2['start_timestamp'].max().date()))
@@ -253,7 +265,7 @@ with col2:
         st.components.v1.html(m_user2._repr_html_(), width=400, height=300)
         
         # Gráfico de barras para la distancia media por tipo de transporte
-        st.subheader('Distancia Media por Tipo de Transporte - Usuario 2')
+        st.subheader('Distancia Media por Tipo de Transporte - B')
         chart_distance_user2 = px.bar(distancia_media_por_transporte_user2, x='activity_type', y='distance', title='Distancia Media por Tipo de Transporte - Usuario 2')
         chart_distance_user2.update_xaxes(title_text='Tipo de Transporte')
         chart_distance_user2.update_yaxes(title_text='Distancia Media (metros)')
@@ -261,7 +273,7 @@ with col2:
          # Calcular la cantidad de veces que se han usado los diferentes medios de transporte
         transport_counts_user2 = df_filtrado_user2['activity_type'].value_counts()
         
-        st.subheader('Uso de Medios de Transporte - Usuario 2')
+        st.subheader('Cantidad de veces que has desplazado en... - B')
         # Mostrar los contadores de uso de medios de transporte en un formato de tabla
         st.write(transport_counts_user2)
         df_user1['start_timestamp'] = pd.to_datetime(df_user1['start_timestamp'])
@@ -269,17 +281,23 @@ with col2:
         # Configura el índice como un DatetimeIndex
         actividades_por_dia = df_user1.groupby(df_user1['start_timestamp'].dt.floor('D'))['activity_type'].count()
 
-        # Crea el gráfico de calendario
-        calplot.calplot(actividades_por_dia,
-                        suptitle='Calendario',
-                        suptitle_kws={'x': 0.0, 'y': 1.0})
+        #grafico
+        df_filtrado_user2['start_timestamp'] = pd.to_datetime(df_filtrado_user2['start_timestamp'])
 
-        # Muestra el gráfico
-        st.plt.show()
+        actividades_por_dia = df_filtrado_user2.groupby(df_filtrado_user2['start_timestamp'].dt.floor('D'))['activity_type'].count()
+
+        fig = calplot.calplot(actividades_por_dia,
+                    suptitle='Calendario',
+                    suptitle_kws={'x': 0.0, 'y': 1.0})
+        
+        plt.savefig('temp_calendar.png')
+        plt.show()
+        # Muestra la figura en Streamlit
+        st.image('temp_calendar.png')
     else:
         st.warning('Por favor, selecciona filtros para generar información.')  # Cambio el mensaje para el Usuario 2
         # Cargar una imagen desde tu sistema de archivos local
-        image_user2 = Image.open('IMG-20230826-WA0000.jpg')  # Cambio la imagen para el Usuario 2
+        image_user2 = Image.open('estaciones.jpg')  # Cambio la imagen para el Usuario 2
 
         # Mostrar la imagen en Streamlit
-        st.image(image_user2, caption='Si no viste esta serie de pequeño, tu infancia fue una mierda', use_column_width=True)
+        st.image(image_user2, caption='...ya te digo yo que YO no.', use_column_width=True)
