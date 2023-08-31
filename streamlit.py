@@ -15,9 +15,8 @@ st.set_page_config(layout = 'wide', initial_sidebar_state = 'collapsed', page_ti
 
 # Título principal
 st.title("Comparador de Movimientos")
-# Texto explicativo con fuente más pequeña utilizando Markdown
-st.markdown("Ahora, usando los filtros, puedes ver cómo te mueves, en qué medios, qué distancias, en qué momento del día y en qué fechas .", unsafe_allow_html=True)
-
+st.subheader('Usando los filtros podrás analizar tus movimientos y encontrar patrones curiosos', divider='rainbow')
+st.subheader('seguro que cambias algo tras el  :blue[analisis] :sunglasses:')
 st.text
 col1, col2 = st.columns(2)
 
@@ -81,8 +80,7 @@ with col1:
         total_distance_user1 = df_filtrado_user1['distance'].sum()/1000
 
         custom_text_user1 = f'Desde "{date_range_user1[0].strftime("%Y-%m-%d")}" hasta "{date_range_user1[1].strftime("%Y-%m-%d")}", te has movido.'
-        # Mostrar el mapa en Streamlit
-        st.components.v1.html(m_user1._repr_html_(), width=400, height=300)
+        
         st.write(custom_text_user1)
         col3, col4= st.columns(2)
 
@@ -96,7 +94,7 @@ with col1:
             st.markdown('vueltas al mundo')
             st.metric(label='vueltas al mundo', value = total_distance_user1/40000)
 
-        
+       
 
        # Calcular la diferencia entre las fechas de inicio y fin en segundos
         df_filtrado_user1['duration_seconds'] = (df_filtrado_user1['end_timestamp'] - df_filtrado_user1['start_timestamp']).dt.total_seconds()
@@ -112,9 +110,11 @@ with col1:
         minutes_user1, seconds_user1 = divmod(remainder_user1, 60)
 
         # Mostrar el resultado
-        
         st.write(f'Total de tiempo moviéndote: {days_user1:02d} días {hours_user1:02d} horas {minutes_user1:02d} minutos {seconds_user1:02d} segundos')
 
+        # Mostrar el mapa en Streamlit
+        st.components.v1.html(m_user1._repr_html_(), width=400, height=300)
+       
         
         # Gráfico de barras para la distancia media por tipo de transporte
         st.subheader('Distancia Media por Tipo de Transporte - A')
@@ -133,7 +133,7 @@ with col1:
         df_filtrado_user1['start_timestamp'] = pd.to_datetime(df_filtrado_user1['start_timestamp'])
 
         actividades_por_dia = df_filtrado_user1.groupby(df_filtrado_user1['start_timestamp'].dt.floor('D'))['activity_type'].count()
-
+        st.subheader('Y en que días te mueves más... - A')
         fig = calplot.calplot(actividades_por_dia,
                     suptitle='Calendario',
                     suptitle_kws={'x': 0.0, 'y': 1.0})
@@ -285,7 +285,7 @@ with col2:
         df_filtrado_user2['start_timestamp'] = pd.to_datetime(df_filtrado_user2['start_timestamp'])
 
         actividades_por_dia = df_filtrado_user2.groupby(df_filtrado_user2['start_timestamp'].dt.floor('D'))['activity_type'].count()
-
+        st.subheader('Y en que días te mueves más... - B')
         fig = calplot.calplot(actividades_por_dia,
                     suptitle='Calendario',
                     suptitle_kws={'x': 0.0, 'y': 1.0})
