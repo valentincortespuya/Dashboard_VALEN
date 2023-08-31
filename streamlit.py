@@ -132,7 +132,7 @@ with col1:
         chart_distance_user1 = px.bar(distancia_media_por_transporte_user1, x='activity_type', y='distance', title='Distancia Media por Tipo de Transporte - Usuario 1')
         chart_distance_user1.update_xaxes(title_text='Tipo de Transporte')
         chart_distance_user1.update_yaxes(title_text='Distancia Media (metros)')
-        st.plotly_chart(chart_distance_user1)
+        st.plotly_chart(chart_distance_user1, use_container_width=True)
         
         # Calcular la cantidad de veces que se han usado los diferentes medios de transporte
         transport_counts_user1 = df_filtrado_user1['activity_type'].value_counts()
@@ -292,7 +292,7 @@ with col2:
         chart_distance_user2 = px.bar(distancia_media_por_transporte_user2, x='activity_type', y='distance', title='Distancia Media por Tipo de Transporte - Usuario 2')
         chart_distance_user2.update_xaxes(title_text='Tipo de Transporte')
         chart_distance_user2.update_yaxes(title_text='Distancia Media (metros)')
-        st.plotly_chart(chart_distance_user2)
+        st.plotly_chart(chart_distance_user2, use_container_width=True)
          # Calcular la cantidad de veces que se han usado los diferentes medios de transporte
         transport_counts_user2 = df_filtrado_user2['activity_type'].value_counts()
         
