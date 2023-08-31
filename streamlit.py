@@ -17,13 +17,14 @@ st.set_page_config(layout = 'wide', initial_sidebar_state = 'collapsed', page_ti
 st.title("Comparador de Movimientos")
 st.subheader('Usando los filtros podrás analizar tus movimientos y encontrar patrones curiosos', divider='rainbow')
 st.subheader('seguro que cambias algo tras el  :blue[analisis] :sunglasses:')
-st.text
+
+
 col1, col2 = st.columns(2)
 
 # Usuario 1
 with col1:
     st.header("Momento A")
-    df_user1 = pd.read_csv('ubicaciones_historicas_usuario1.csv')
+    df_user1 = pd.read_csv('DATA/ubicaciones_historicas_usuario1.csv')
     
     df_user1['start_timestamp'] = pd.to_datetime(df_user1['start_timestamp'])
     df_user1['end_timestamp'] = pd.to_datetime(df_user1['end_timestamp'])
@@ -87,12 +88,12 @@ with col1:
         with col3:
             
             st.markdown('total distance')
-            st.metric(label='km', value = total_distance_user1)
-
+            st.metric(label='km', value =round(total_distance_user1, 2))
+        
         with col4:
             
             st.markdown('vueltas al mundo')
-            st.metric(label='vueltas al mundo', value = total_distance_user1/40000)
+            st.metric(label='vueltas al mundo', value=round(total_distance_user1/40000, 4))
 
        
 
@@ -147,7 +148,7 @@ with col1:
     else:
         st.warning('Por favor, selecciona filtros para generar información.')
         # Cargar una imagen desde tu sistema de archivos local
-        image_user1 = Image.open('estaciones.jpg')  # Cambio la imagen para el Usuario 1
+        image_user1 = Image.open('FOTOS/estaciones.jpg')  # Cambio la imagen para el Usuario 1
 
         # Mostrar la imagen en Streamlit
         st.image(image_user1, caption='Crees que te mueves lo mismo en vernano que en invierno, por la mañana que por la tarde...', use_column_width=True)
@@ -159,12 +160,12 @@ with col2:
     st.header("Momento B")
     
     # Cargar el archivo CSV para el Usuario 2
-    df_user2 = pd.read_csv('ubicaciones_historicas_usuario2.csv')  # Reemplaza 'ubicaciones_historicas_usuario2.csv' con el nombre del archivo del Usuario 2
+    df_user2 = pd.read_csv('DATA/ubicaciones_historicas_usuario2.csv')  # Reemplaza 'ubicaciones_historicas_usuario2.csv' con el nombre del archivo del Usuario 2
     
     # Convierte las columnas de tiempo a objetos datetime
     df_user2['start_timestamp'] = pd.to_datetime(df_user2['start_timestamp'])
     df_user2['end_timestamp'] = pd.to_datetime(df_user2['end_timestamp'])
-    
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Filtros para el Usuario 2
     st.sidebar.header('Momento B')
     selected_distances_user2 = st.sidebar.multiselect('Selecciona una distancia b:', df_user2['distance_group'].unique())
@@ -177,6 +178,7 @@ with col2:
                                     max_value=df_user2['start_timestamp'].max().date(),
                                     value=(df_user2['start_timestamp'].min().date(), df_user2['start_timestamp'].max().date()))
 
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Verificar si al menos un filtro está seleccionado
     if selected_distances_user2 or selected_confidences_user2 or selected_activities_user2:
         # Filtrar el DataFrame por los valores seleccionados
@@ -237,12 +239,13 @@ with col2:
         with col5:
             
             st.markdown('total distance')
-            st.metric(label='km', value = total_distance_user2)
-
+            
+            st.metric(label='km', value =round(total_distance_user2, 2))
         with col6:
             
             st.markdown('vueltas al mundo')
-            st.metric(label='vueltas al mundo', value = total_distance_user2/40000)
+            
+            st.metric(label='vueltas al mundo', value=round(total_distance_user2/40000, 4))
 
         # Calcular la diferencia entre las fechas de inicio y fin en segundos
         df_filtrado_user2['duration_seconds'] = (df_filtrado_user2['end_timestamp'] - df_filtrado_user2['start_timestamp']).dt.total_seconds()
@@ -297,7 +300,7 @@ with col2:
     else:
         st.warning('Por favor, selecciona filtros para generar información.')  # Cambio el mensaje para el Usuario 2
         # Cargar una imagen desde tu sistema de archivos local
-        image_user2 = Image.open('estaciones.jpg')  # Cambio la imagen para el Usuario 2
+        image_user2 = Image.open('FOTOS/estaciones.jpg')  # Cambio la imagen para el Usuario 2
 
         # Mostrar la imagen en Streamlit
         st.image(image_user2, caption='...ya te digo yo que YO no.', use_column_width=True)
