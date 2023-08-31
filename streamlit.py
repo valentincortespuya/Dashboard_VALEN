@@ -113,6 +113,16 @@ with col1:
         # Mostrar el resultado
         st.write(f'Total de tiempo moviéndote: {days_user1:02d} días {hours_user1:02d} horas {minutes_user1:02d} minutos {seconds_user1:02d} segundos')
 
+        #velocidad media
+
+        velocidadmedia_1= total_distance_user1/(total_duration_seconds_user1/3600)
+        formatted_velocidadmedia_1 = "{:.2f}".format(velocidadmedia_1)
+        st.write(f'tu velocidad media ha sido:{formatted_velocidadmedia_1} km/h')
+
+
+
+
+
         # Mostrar el mapa en Streamlit
         st.components.v1.html(m_user1._repr_html_(), width=400, height=300)
        
@@ -260,9 +270,19 @@ with col2:
         hours_user2, remainder_user2 = divmod(seconds_user2, 3600)
         minutes_user2, seconds_user2 = divmod(remainder_user2, 60)
 
+
         # Mostrar el resultado
         
         st.write(f'Total de tiempo moviéndote: {days_user2:02d} días {hours_user2:02d} horas {minutes_user2:02d} minutos {seconds_user2:02d} segundos')
+
+        #velocidad media
+
+        velocidadmedia_2= total_distance_user2/(total_duration_seconds_user2/3600)
+        formatted_velocidadmedia_2 = "{:.2f}".format(velocidadmedia_2)
+        st.write(f'tu velocidad media ha sido:{formatted_velocidadmedia_2} km/h')
+
+
+
 
         # Mostrar el mapa en Streamlit
         st.components.v1.html(m_user2._repr_html_(), width=400, height=300)
