@@ -1,4 +1,4 @@
-# Dashboard_VALEN
+# Dashboard de movimiento usando los datos de google recopilados por tu teléfono.
 En este trabajo vas a encontrar un Dashboard para anlizar los datos extraidos desde google sobre los movimientos que se han realizado. 
 
 Google utiliza varias técnicas y fuentes de datos para recopilar información de movilidad a través de los teléfonos móviles. Estas son algunas de las formas en las que Google obtiene datos de movilidad:
@@ -82,8 +82,13 @@ Ejecuta la aplicación Streamlit utilizando el comando streamlit run nombre_del_
 ### Notas
 Los archivos CSV de ubicaciones históricas deben contener columnas como 'start_timestamp', 'end_timestamp', 'start_latitude', 'start_longitude', 'end_latitude', 'end_longitude', 'distance', 'duration_formatted', 'momento_del_dia' y 'activity_type'.
 
+## Siguientes Pasos
 
-
+Lo primero que tengo que hacer es finalizar el código y ver como evitar que los cambios en las entregas de google afecten a todo.
+Lo segundo que quiero llevar a cabo es la generación de parcelas que permitan localizar puntos calientes y saber así cuales son los destinos mas frecuentados. (google te puede dar varios cientos de coordenadas muy similares pero no exactas para la misma posicion geográfica, por ejemplo tu casa.)
+Otra de las cosas que quiero ver es si la visualización de los mapas puede mejorar con otros sistemas como kepler. 
+Utilizar machile learning para rellenar huecos en esas fechas en las que no he llevado mi teléfono conmigo. 
+Ver como el usuario puede encontrar posiblidades de eficiencia en sus vidas con estos datos tales como: Usar un medio de trasnsporte frente a otro.
 
 
 

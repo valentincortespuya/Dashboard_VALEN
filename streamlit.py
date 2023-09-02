@@ -16,7 +16,7 @@ st.set_page_config(layout = 'wide', initial_sidebar_state = 'collapsed', page_ti
 # Título principal
 st.title("Comparador de Movimientos")
 st.subheader('Usando los filtros podrás analizar tus movimientos y encontrar patrones curiosos', divider='rainbow')
-st.subheader('seguro que cambias algo tras el  :blue[analisis] :sunglasses:')
+st.subheader('seguro que cambias algo tras el  :blue[análisis] :sunglasses:')
 
 
 col1, col2 = st.columns(2)
@@ -93,7 +93,7 @@ with col1:
         with col4:
             
             st.markdown('vueltas al mundo')
-            st.metric(label='vueltas al mundo', value=round(total_distance_user1/40000, 4))
+            st.metric(label='', value=round(total_distance_user1/40000, 4))
 
        
 
@@ -255,7 +255,7 @@ with col2:
             
             st.markdown('vueltas al mundo')
             
-            st.metric(label='vueltas al mundo', value=round(total_distance_user2/40000, 4))
+            st.metric(label='', value=round(total_distance_user2/40000, 4))
 
         # Calcular la diferencia entre las fechas de inicio y fin en segundos
         df_filtrado_user2['duration_seconds'] = (df_filtrado_user2['end_timestamp'] - df_filtrado_user2['start_timestamp']).dt.total_seconds()
